@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shapes</title>
+    <link rel="stylesheet" href="3d-shapes.css">
+</head>
+<body>
+    <!-- Container for the selectors and button -->
+    <div id="selectors-container">
+        <!-- Shape selector -->
+        <select id="shape-selector">
+            <option value="" disabled selected>Shape</option>
+            <option value="torus">Torus</option>
+            <option value="cube">Cube</option>
+            <option value="sphere">Sphere</option>
+            <option value="dodecahedron">Dodecahedron</option>
+            <option value="octahedron">Octahedron</option>
+            <option value="icosahedron">Icosahedron</option>
+            <option value="tetrahedron">Tetrahedron</option>
+            <option value="cylinder">Cylinder</option>
+            <option value="cone">Cone</option>
+            <option value="torusKnot">Torus Knot</option>
+            <option value="pyramid">Pyramid</option>
+            <option value="tube">Tube</option>
+            <option value="ring">Ring</option>
+        </select>
+             
+    
+        <select id="style-selector">
+            <option value="" disabled selected>Style</option>
+            <option value="solid">Solid</option>
+            <option value="wireframe">Wireframe</option>
+            <option value="points">Points</option>
+            <option value="line">Line</option>
+            <option value="basic">Basic</option>
+            <option value="matcap">Matcap</option>
+            <option value="lambert">Lambert</option>
+            <option value="phong">Phong</option>
+            <option value="normal">Normal</option>
+        </select>
+
+        <select id="color-selector">
+            <option value="" disabled selected>Color</option>
+            <option value="rainbow">Rainbow</option>
+            <option value="DarkRed">Dark Red</option>
+            <option value="Red">Red</option>
+            <option value="FireBrick">Fire Brick</option>
+            <option value="DarkOrange">Dark Orange</option>
+            <option value="OrangeRed">Orange Red</option>
+            <option value="Gold">Gold</option>
+            <option value="Olive">Olive</option>
+            <option value="DarkGreen">Dark Green</option>
+            <option value="Green">Green</option>
+            <option value="Teal">Teal</option>
+            <option value="DarkCyan">Dark Cyan</option>
+            <option value="MediumBlue">Medium Blue</option>
+            <option value="DarkBlue">Dark Blue</option>
+            <option value="Navy">Navy</option>
+            <option value="Indigo">Indigo</option>
+            <option value="Purple">Purple</option>
+            <option value="DarkMagenta">Dark Magenta</option>
+            <option value="Tomato">Tomato</option>
+            <option value="Orange">Orange</option>
+            <option value="Yellow">Yellow</option>
+            <option value="YellowGreen">Yellow Green</option>
+            <option value="Lime">Lime</option>
+            <option value="SpringGreen">Spring Green</option>
+            <option value="Cyan">Cyan</option>
+            <option value="DeepSkyBlue">Deep Sky Blue</option>
+            <option value="DodgerBlue">Dodger Blue</option>
+            <option value="Blue">Blue</option>
+            <option value="MediumSlateBlue">Medium Slate Blue</option>
+            <option value="Violet">Violet</option>
+            <option value="Orchid">Orchid</option>
+            <option value="MediumOrchid">Medium Orchid</option>
+            <option value="Plum">Plum</option>
+            <option value="LightSalmon">Light Salmon</option>
+            <option value="LightCoral">Light Coral</option>
+            <option value="LightYellow">Light Yellow</option>
+            <option value="PaleGreen">Pale Green</option>
+            <option value="LightGreen">Light Green</option>
+            <option value="LightSkyBlue">Light Sky Blue</option>
+            <option value="Lavender">Lavender</option>
+            <option value="Thistle">Thistle</option>
+            <option value="Pink">Pink</option>
+            <option value="LightPink">Light Pink</option>
+            <option value="MistyRose">Misty Rose</option>
+            <option value="Snow">Snow</option>
+            <option value="White">White</option>
+            <option value="Gray">Gray</option>
+            <option value="LightGray">Light Gray</option>
+            <option value="Silver">Silver</option>
+            <option value="Gainsboro">Gainsboro</option>
+            <option value="WhiteSmoke">White Smoke</option>
+            <option value="Ivory">Ivory</option>
+            <option value="Black">Black</option>
+        </select>   
+
+        <select id="parameter-selector">
+            <option value="" disabled selected>Parameters</option>
+        </select>
+    </div>
+    <canvas id="canvas"></canvas>
+    
+    <!-- Import Map for JavaScript Modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./js/three.module.js",
+                "three/addons/": "./js/"
+            }
+        }
+    </script>
+    
+    <script type="module" src="js/3d-shapes.js"></script>
+</body>
+</html>

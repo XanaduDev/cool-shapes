@@ -1,0 +1,242 @@
+import * as THREE from './three.module.js';
+import { OrbitControls } from './OrbitControls.js';
+
+// Initialize Three.js scene, camera, and renderer
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({ canvas });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 20;
+
+// Initialize OrbitControls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.25;
+controls.enableZoom = true;
+
+// Event listener for window resizing
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+
+// Shape options with their respective geometry and parameters
+const shapes = {
+    torus: { geometry: (params) => new THREE.TorusGeometry(params.radius || 7, params.tube || 3.5, params.radialSegments || 100, params.tubularSegments || 100), parameters: ['radius', 'tube', 'radialSegments', 'tubularSegments'], defaultValues: { radius: 7, tube: 3.5, radialSegments: 100, tubularSegments: 100 } },
+    cube: { geometry: (params) => new THREE.BoxGeometry(params.width || 9, params.height || 9, params.depth || 9), parameters: ['width', 'height', 'depth'], defaultValues: { width: 9, height: 9, depth: 9 } },
+    sphere: { geometry: (params) => new THREE.SphereGeometry(params.radius || 7, params.widthSegments || 50, params.heightSegments || 50), parameters: ['radius', 'widthSegments', 'heightSegments'], defaultValues: { radius: 7, widthSegments: 50, heightSegments: 50 } },
+    dodecahedron: { geometry: (params) => new THREE.DodecahedronGeometry(params.radius || 7), parameters: ['radius'], defaultValues: { radius: 7 } },
+    octahedron: { geometry: (params) => new THREE.OctahedronGeometry(params.radius || 7), parameters: ['radius'], defaultValues: { radius: 7 } },
+    icosahedron: { geometry: (params) => new THREE.IcosahedronGeometry(params.radius || 7), parameters: ['radius'], defaultValues: { radius: 7 } },
+    tetrahedron: { geometry: (params) => new THREE.TetrahedronGeometry(params.radius || 7), parameters: ['radius'], defaultValues: { radius: 7 } },
+    cylinder: { geometry: (params) => new THREE.CylinderGeometry(params.radiusTop || 7, params.radiusBottom || 7, params.height || 7, params.radialSegments || 32), parameters: ['radiusTop', 'radiusBottom', 'height', 'radialSegments'], defaultValues: { radiusTop: 7, radiusBottom: 7, height: 7, radialSegments: 32 } },
+    cone: { geometry: (params) => new THREE.ConeGeometry(params.radius || 7, params.height || 14, params.radialSegments || 100), parameters: ['radius', 'height', 'radialSegments'], defaultValues: { radius: 7, height: 14, radialSegments: 100 } },
+    torusKnot: { geometry: (params) => new THREE.TorusKnotGeometry(params.radius || 6, params.tube || 2, params.radialSegments || 200, params.tubularSegments || 50), parameters: ['radius', 'tube', 'radialSegments', 'tubularSegments'], defaultValues: { radius: 6, tube: 2, radialSegments: 200, tubularSegments: 50 } },
+    pyramid: { geometry: (params) => { const geo = new THREE.ConeGeometry(params.radius || 7, params.height || 14, params.radialSegments || 4); geo.rotateX(Math.PI / 2); return geo; }, parameters: ['radius', 'height', 'radialSegments'], defaultValues: { radius: 7, height: 14, radialSegments: 4 } },
+    ring: { geometry: (params) => new THREE.RingGeometry(params.innerRadius || 5, params.outerRadius || 10, params.thetaSegments || 32), parameters: ['innerRadius', 'outerRadius', 'thetaSegments'], defaultValues: { innerRadius: 5, outerRadius: 10, thetaSegments: 32 } },
+    tube: { geometry: (params) => { const path = new THREE.CurvePath(); path.add(new THREE.LineCurve3(new THREE.Vector3(-params.radius || -5, 0, 0), new THREE.Vector3(params.radius || 5, 0, 0))); return new THREE.TubeGeometry(path, params.radialSegments || 8, params.radius || 5, params.tubularSegments || 64); }, parameters: ['radius', 'radialSegments', 'tubularSegments'], defaultValues: { radius: 5, radialSegments: 8, tubularSegments: 64 } }
+};
+
+
+let currentShape = 'torus';
+let currentParams = { ...shapes[currentShape].defaultValues };
+let currentStyle = 'solid';
+let isRainbow = true;
+let currentColor = new THREE.Color(0xff0000);
+let mesh;
+
+// Add lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0xffffff, 1);
+pointLight.position.set(20, 20, 20);
+pointLight.castShadow = true;
+scene.add(pointLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(-10, 20, 10);
+directionalLight.castShadow = true;
+scene.add(directionalLight);
+
+// Add ground plane to receive shadows
+const planeGeometry = new THREE.PlaneGeometry(200, 200);
+const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
+const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.rotation.x = -Math.PI / 2;
+plane.position.y = -10;
+plane.receiveShadow = true;
+scene.add(plane);
+
+// Reset camera position and zoom
+function resetCamera() {
+    camera.position.set(0, 0, 20);
+    controls.reset();
+}
+
+// Create and add shape to scene
+function createShape() {
+    if (mesh) scene.remove(mesh);
+
+    const { geometry: geometryFn } = shapes[currentShape];
+    const geometry = geometryFn(currentParams);
+    const color = isRainbow ? getRainbowColor(0) : currentColor;
+
+    let material;
+    switch (currentStyle) { 
+        case 'points': mesh = new THREE.Points(geometry, new THREE.PointsMaterial({ color, size: 0.5 })); break; 
+        case 'line': mesh = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color })); break; 
+        case 'basic': mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color })); break; 
+        case 'matcap': material = new THREE.MeshMatcapMaterial({ matcap: new THREE.TextureLoader().load('photos/metcap.png') }); material.color.set(color); mesh = new THREE.Mesh(geometry, material); break; 
+        case 'lambert': mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color })); break; 
+        case 'phong': mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color, shininess: 100 })); break; 
+        case 'normal': mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial()); break; 
+        default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.5, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break; 
+    }
+    
+    scene.add(mesh);
+}
+
+// Update parameter options based on selected shape
+function updateParameterOptions() {
+    const parameterSelector = document.getElementById('parameter-selector');
+    if (!parameterSelector) return; // Early exit if element not found
+
+    const parameters = shapes[currentShape].parameters;
+
+    // Clear current options
+    parameterSelector.innerHTML = '';
+
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Parameters';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    parameterSelector.appendChild(defaultOption);
+
+    // Add new options based on selected shape
+    parameters.forEach(param => {
+        const option = document.createElement('option');
+        option.value = param;
+        option.textContent = param.charAt(0).toUpperCase() + param.slice(1);
+        parameterSelector.appendChild(option);
+    });
+
+    // Reset current parameters
+    currentParams = { ...shapes[currentShape].defaultValues };
+    parameterSelector.selectedIndex = 0; // Set default selection to "Select a parameter"
+
+    // Update parameter input field
+    const paramInput = document.getElementById('param-input');
+    if (paramInput) {
+        paramInput.value = currentParams[parameterSelector.value] || '';
+    }
+
+    // Show the parameter selector
+    parameterSelector.style.display = 'block';
+        
+    // Reset camera and zoom
+    resetCamera();
+
+    // Create new shape
+    createShape();    
+}
+
+// Update parameter value when selected
+function updateParameterValue(param, value) {
+    currentParams[param] = parseFloat(value) || shapes[currentShape].defaultValues[param];
+    createShape();
+}
+
+// Helper function to get a color based on value (0 to 1) cycling through rainbow hues
+function getRainbowColor(value) {
+    const hue = value * 360;
+    return new THREE.Color(`hsl(${hue}, 100%, 50%)`);
+}
+
+let colorValue = 0;
+let isInteracting = false;
+
+// Animate function
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (mesh) {
+        if (!isInteracting) {
+            mesh.rotation.x += 0.01;
+            mesh.rotation.y += 0.01;
+        }
+        
+        if (isRainbow) {
+            colorValue += 0.001;
+            if (colorValue > 1) colorValue = 0;
+            mesh.material.color = getRainbowColor(colorValue);
+        }
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+// Event listeners for mouse interactions
+document.addEventListener('mousedown', () => {
+    isInteracting = true;
+});
+
+document.addEventListener('mouseup', () => {
+    isInteracting = false;
+});
+
+// Initialize shape and parameters
+updateParameterOptions();
+createShape();
+
+// Start animation loop
+animate();
+
+// Event listeners for UI controls
+document.getElementById('shape-selector').addEventListener('change', (event) => {
+    currentShape = event.target.value;
+    updateParameterOptions();
+});
+
+document.getElementById('parameter-selector').addEventListener('change', (event) => {
+    const param = event.target.value;
+
+    if (param) {
+        let inputField = document.getElementById('param-input');
+        if (!inputField) {
+            inputField = document.createElement('input');
+            inputField.type = 'number';
+            inputField.id = 'param-input';
+            inputField.min = '0';
+            inputField.style.position = 'absolute';
+            inputField.style.top = '180px';
+            inputField.style.left = '20px';
+            inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
+            inputField.addEventListener('input', (e) => updateParameterValue(param, e.target.value));
+            document.body.appendChild(inputField);
+        } else {
+            inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
+            inputField.oninput = (e) => updateParameterValue(param, e.target.value);
+        }
+    }
+});
+
+document.getElementById('style-selector').addEventListener('change', (event) => {
+    currentStyle = event.target.value;
+    createShape();
+});
+
+document.getElementById('color-selector').addEventListener('change', (event) => {
+    const value = event.target.value;
+    isRainbow = value === 'rainbow';
+    currentColor = isRainbow ? new THREE.Color(0xff0000) : new THREE.Color(value);
+    createShape();
+});
