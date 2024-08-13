@@ -13,7 +13,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.set( -50, 5, 0 );
+    camera.position.set( 35, 5, -30 );
 
     const scene = new THREE.Scene();
 
