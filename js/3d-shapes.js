@@ -14,8 +14,8 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     // Camera Setup
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.set(10, 0, -30);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(20, 0, -45);
 
     // Scene and Controls Setup
     const scene = new THREE.Scene();
@@ -55,7 +55,7 @@ function init() {
 
     // Add RectAreaLights to Scene
     lights.forEach(({ color, position, rotation = 0 }) => {
-        const rectLight = new THREE.RectAreaLight(color, 5, 10, 28);
+        const rectLight = new THREE.RectAreaLight(color, 5, 10, 30);
         rectLight.position.set(...position);
         rectLight.rotation.y += rotation;
         scene.add(rectLight);
@@ -70,7 +70,7 @@ function init() {
     floor.position.set(0, -12.5, -35);
     scene.add(floor);
 
-        // Create Shape Function
+    // Create Shape Function
     function createShape() {
         if (mesh) scene.remove(mesh);
     
