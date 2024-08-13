@@ -1,16 +1,20 @@
 import * as THREE from './three.module.js';
 import { OrbitControls } from './OrbitControls.js';
+import { RectAreaLightHelper } from './RectAreaLightHelper.js';
+import { RectAreaLightUniformsLib } from './RectAreaLightUniformsLib.js';
 
+init();
+
+function init() {
 // Initialize Three.js scene, camera, and renderer
 const canvas = document.getElementById('canvas');
 const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
+
+const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+camera.position.set( 0, 5, - 40 );
 
 const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 20;
 
 // Initialize OrbitControls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -51,31 +55,46 @@ let currentColor = new THREE.Color(0xff0000);
 let mesh;
 
 // Add lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
 
-const pointLight = new THREE.PointLight(0xffffff, 1);
-pointLight.position.set(20, 20, 20);
-pointLight.castShadow = true;
-scene.add(pointLight);
+RectAreaLightUniformsLib.init();
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(-10, 20, 10);
-directionalLight.castShadow = true;
-scene.add(directionalLight);
+const rectLight1 = new THREE.RectAreaLight( 0xff0000, 5, 10, 28 );
+rectLight1.position.set( - 13, 0, 15 );
+scene.add( rectLight1 );
 
-// Add ground plane to receive shadows
-const planeGeometry = new THREE.PlaneGeometry(200, 200);
-const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.rotation.x = -Math.PI / 2;
-plane.position.y = -10;
-plane.receiveShadow = true;
-scene.add(plane);
+const rectLight2 = new THREE.RectAreaLight( 0x00ff00, 5, 10, 28 );
+rectLight2.position.set( 0, 0, 15 );
+scene.add( rectLight2 );
+
+const rectLight3 = new THREE.RectAreaLight( 0x0000ff, 5, 10, 28 );
+rectLight3.position.set( 13, 0, 15 );
+scene.add( rectLight3 );
+
+// Create the RectAreaLight
+const rectLight4 = new THREE.RectAreaLight(0xFFFFFF, 5, 15, 25);
+rectLight4.position.set(0, 0, -80);
+rectLight4.rotation.y += Math.PI;  // 180 degrees in radians
+scene.add(rectLight4);
+
+// Add the RectAreaLightHelper to visualize the light (optional)
+scene.add( new RectAreaLightHelper( rectLight4 ) );
+
+
+scene.add( new RectAreaLightHelper( rectLight1 ) );
+scene.add( new RectAreaLightHelper( rectLight2 ) );
+scene.add( new RectAreaLightHelper( rectLight3 ) );
+
+
+// Floor
+const geoFloor = new THREE.BoxGeometry( 1000, 0.1, 1000 );
+const matStdFloor = new THREE.MeshStandardMaterial( { color: 0xbcbcbc, roughness: 0.1, metalness: 0 } );
+const mshStdFloor = new THREE.Mesh( geoFloor, matStdFloor );
+mshStdFloor.position.set(0, - 12.5, -35);
+scene.add( mshStdFloor );
 
 // Reset camera position and zoom
 function resetCamera() {
-    camera.position.set(0, 0, 20);
+    camera.position.set(0, 5, -40);
     controls.reset();
 }
 
@@ -93,8 +112,6 @@ function createShape() {
         case 'line': mesh = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color })); break; 
         case 'basic': mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color })); break; 
         case 'matcap': material = new THREE.MeshMatcapMaterial({ matcap: new THREE.TextureLoader().load('photos/metcap.png') }); material.color.set(color); mesh = new THREE.Mesh(geometry, material); break; 
-        case 'lambert': mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color })); break; 
-        case 'phong': mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color, shininess: 100 })); break; 
         case 'normal': mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial()); break; 
         default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.5, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break; 
     }
@@ -162,6 +179,7 @@ function getRainbowColor(value) {
 
 let colorValue = 0;
 let isInteracting = false;
+
 
 // Animate function
 function animate() {
@@ -240,3 +258,4 @@ document.getElementById('color-selector').addEventListener('change', (event) => 
     currentColor = isRainbow ? new THREE.Color(0xff0000) : new THREE.Color(value);
     createShape();
 });
+}
