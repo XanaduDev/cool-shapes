@@ -70,7 +70,6 @@ const rectLight3 = new THREE.RectAreaLight( 0x0000ff, 5, 10, 28 );
 rectLight3.position.set( 13, 0, 15 );
 scene.add( rectLight3 );
 
-// Create the RectAreaLight
 const rectLight4 = new THREE.RectAreaLight(0xFFFFFF, 5, 15, 25);
 rectLight4.position.set(0, 0, -80);
 rectLight4.rotation.y += Math.PI;  // 180 degrees in radians
