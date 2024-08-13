@@ -40,6 +40,7 @@ function init() {
 
     // Lighting Setup
     RectAreaLightUniformsLib.init();
+
     const pointLight = new THREE.PointLight(0xffffff, 50);
     pointLight.position.set(5, 10, -5);
     scene.add(pointLight); 
@@ -68,25 +69,18 @@ function init() {
     floor.position.set(0, -12.5, -35);
     scene.add(floor);
 
-    // Create Shape Function
+        // Create Shape Function
     function createShape() {
-        if (mesh) scene.remove(mesh); // Remove existing shape if any
-        const geometry = shapes[currentShape].geometry(currentParams),
-            color = isRainbow ? getRainbowColor(0) : currentColor;
-        let material;
-
-        // Choose material and mesh type based on style
-        switch (currentStyle) {
-            case 'points': mesh = new THREE.Points(geometry, new THREE.PointsMaterial({ color, size: 0.5 })); break;
-            case 'line': mesh = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color })); break;
-            case 'basic': mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color })); break;
-            case 'matcap': material = new THREE.MeshMatcapMaterial({ matcap: new THREE.TextureLoader().load('photos/metcap.png') }); material.color.set(color); mesh = new THREE.Mesh(geometry, material); break;
-            case 'normal': mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial()); break;
-            case 'mirror': mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 1, roughness: 0 })); break;
-            default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.8, roughness: 0.4, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break;
-        }
-
-        scene.add(mesh); // Add the newly created shape to the scene
+        if (mesh) scene.remove(mesh);
+    
+        const { geometry: geometryFn } = shapes[currentShape];
+        const geometry = geometryFn(currentParams);
+        const color = isRainbow ? getRainbowColor(0) : currentColor;
+    
+        // Use the imported function to create the mesh
+        mesh = createMesh(geometry, currentStyle, color);
+    
+        scene.add(mesh);
     }
 
     // Update Parameter Options Function
