@@ -3,6 +3,7 @@ import { OrbitControls } from './OrbitControls.js';
 import { RectAreaLightHelper } from './RectAreaLightHelper.js';
 import { RectAreaLightUniformsLib } from './RectAreaLightUniformsLib.js';
 import { shapes } from './shapes.js';
+import { createMesh} from './styles.js';
 
 init();
 
