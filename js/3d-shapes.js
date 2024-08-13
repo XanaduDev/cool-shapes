@@ -4,252 +4,173 @@ import { RectAreaLightHelper } from './RectAreaLightHelper.js';
 import { RectAreaLightUniformsLib } from './RectAreaLightUniformsLib.js';
 import { shapes } from './shapes.js';
 
-
-
 init();
 
 function init() {
-    // Initialize Three.js scene, camera, and renderer
+    // Renderer Setup
     const canvas = document.getElementById('canvas');
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.set( 10, 0, -30 );
+    // Camera Setup
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(10, 0, -30);
 
+    // Scene and Controls Setup
     const scene = new THREE.Scene();
-
-    // Initialize OrbitControls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
 
-    // Event listener for window resizing
+    // Window Resize Event Listener
     window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
     });
 
-    let currentShape = 'torusKnot';
-    let currentParams = { ...shapes[currentShape].defaultValues };
-    let currentStyle = 'mirror';
-    let isRainbow = false;
-    let currentColor = 'Ivory';
-    let mesh;
+    // Initial Variables
+    let currentShape = 'torusKnot',
+        currentParams = { ...shapes[currentShape].defaultValues },
+        currentStyle = 'mirror',
+        isRainbow = false,
+        currentColor = 'Ivory',
+        mesh;
 
-    // Add lights
+    // Lighting Setup
     RectAreaLightUniformsLib.init();
+    const lights = [
+        { color: 0x0000ff, position: [-13, 0, 15] },
+        { color: 0x00ff00, position: [0, 0, 15] },
+        { color: 0xff0000, position: [13, 0, 15] },
+        { color: 0xffffff, position: [0, 0, -80], rotation: Math.PI }
+    ];
 
-    const pointLight = new THREE.PointLight(0xffffff, 50);
-    pointLight.position.set(5, 10, -5);
-    scene.add(pointLight); 
+    // Add RectAreaLights to Scene
+    lights.forEach(({ color, position, rotation = 0 }) => {
+        const rectLight = new THREE.RectAreaLight(color, 5, 10, 28);
+        rectLight.position.set(...position);
+        rectLight.rotation.y += rotation;
+        scene.add(rectLight);
+        scene.add(new RectAreaLightHelper(rectLight));
+    });
 
-    const rectLight1 = new THREE.RectAreaLight( 0x0000ff, 5, 10, 28 );
-    rectLight1.position.set( - 13, 0, 15 );
-    scene.add( rectLight1 );
+    // Floor Setup
+    const floor = new THREE.Mesh(
+        new THREE.BoxGeometry(1000, 0.1, 1000),
+        new THREE.MeshStandardMaterial({ color: 0xbcbcbc, roughness: 0.1, metalness: 0 })
+    );
+    floor.position.set(0, -12.5, -35);
+    scene.add(floor);
 
-    const rectLight2 = new THREE.RectAreaLight( 0x00ff00, 5, 10, 28 );
-    rectLight2.position.set( 0, 0, 15 );
-    scene.add( rectLight2 );
-
-    const rectLight3 = new THREE.RectAreaLight( 0xff0000, 5, 10, 28 );
-    rectLight3.position.set( 13, 0, 15 );
-    scene.add( rectLight3 );
-
-    // Create the RectAreaLight
-    const rectLight4 = new THREE.RectAreaLight(0xFFFFFF, 5, 15, 25);
-    rectLight4.position.set(0, 0, -80);
-    rectLight4.rotation.y += Math.PI;  // 180 degrees in radians
-    scene.add(rectLight4);
-
-    // Add the RectAreaLightHelper to visualize the light (optional)
-    scene.add( new RectAreaLightHelper( rectLight4 ) );
-
-
-    scene.add( new RectAreaLightHelper( rectLight1 ) );
-    scene.add( new RectAreaLightHelper( rectLight2 ) );
-    scene.add( new RectAreaLightHelper( rectLight3 ) );
-
-
-    // Floor
-    const geoFloor = new THREE.BoxGeometry( 1000, 0.1, 1000 );
-    const matStdFloor = new THREE.MeshStandardMaterial( { color: 0xbcbcbc, roughness: 0.1, metalness: 0 } );
-    const mshStdFloor = new THREE.Mesh( geoFloor, matStdFloor );
-    mshStdFloor.position.set(0, - 12.5, -35);
-    scene.add( mshStdFloor );
-
-    // Reset camera position and zoom
-    function resetCamera() {
-        camera.position.set(0, 5, -40);
-        controls.reset();
-    }
-
-    // Create and add shape to scene
+    // Create Shape Function
     function createShape() {
-        if (mesh) scene.remove(mesh);
-
-        const { geometry: geometryFn } = shapes[currentShape];
-        const geometry = geometryFn(currentParams);
-        const color = isRainbow ? getRainbowColor(0) : currentColor;
-
+        if (mesh) scene.remove(mesh); // Remove existing shape if any
+        const geometry = shapes[currentShape].geometry(currentParams),
+            color = isRainbow ? getRainbowColor(0) : currentColor;
         let material;
-        switch (currentStyle) { 
-            case 'points': mesh = new THREE.Points(geometry, new THREE.PointsMaterial({ color, size: 0.5 })); break; 
-            case 'line': mesh = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color })); break; 
-            case 'basic': mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color })); break; 
-            case 'matcap': material = new THREE.MeshMatcapMaterial({ matcap: new THREE.TextureLoader().load('photos/metcap.png') }); material.color.set(color); mesh = new THREE.Mesh(geometry, material); break; 
-            case 'normal': mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial()); break; 
-            case 'mirror': mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 1, roughness: 0})); break;
-            default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.8, roughness: 0.4, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break; 
+
+        // Choose material and mesh type based on style
+        switch (currentStyle) {
+            case 'points': mesh = new THREE.Points(geometry, new THREE.PointsMaterial({ color, size: 0.5 })); break;
+            case 'line': mesh = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color })); break;
+            case 'basic': mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color })); break;
+            case 'matcap': material = new THREE.MeshMatcapMaterial({ matcap: new THREE.TextureLoader().load('photos/metcap.png') }); material.color.set(color); mesh = new THREE.Mesh(geometry, material); break;
+            case 'normal': mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial()); break;
+            case 'mirror': mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 1, roughness: 0 })); break;
+            default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.8, roughness: 0.4, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break;
         }
 
-        scene.add(mesh);
+        scene.add(mesh); // Add the newly created shape to the scene
     }
 
-    // Update parameter options based on selected shape
+    // Update Parameter Options Function
     function updateParameterOptions() {
         const parameterSelector = document.getElementById('parameter-selector');
-        if (!parameterSelector) return; // Early exit if element not found
+        if (!parameterSelector) return;
 
-        const parameters = shapes[currentShape].parameters;
-
-        // Clear current options
-        parameterSelector.innerHTML = '';
-
-        // Add default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Parameters';
-        defaultOption.disabled = true;
-        defaultOption.selected = true;
-        parameterSelector.appendChild(defaultOption);
-
-        // Add new options based on selected shape
-        parameters.forEach(param => {
-            const option = document.createElement('option');
-            option.value = param;
-            option.textContent = param.charAt(0).toUpperCase() + param.slice(1);
-            parameterSelector.appendChild(option);
+        // Populate parameter selector with options
+        parameterSelector.innerHTML = '<option value="" disabled selected>Parameters</option>';
+        shapes[currentShape].parameters.forEach(param => {
+            parameterSelector.innerHTML += `<option value="${param}">${param.charAt(0).toUpperCase() + param.slice(1)}</option>`;
         });
 
-        // Reset current parameters
         currentParams = { ...shapes[currentShape].defaultValues };
-        parameterSelector.selectedIndex = 0; // Set default selection to "Select a parameter"
-
-        // Update parameter input field
-        const paramInput = document.getElementById('param-input');
-        if (paramInput) {
-            paramInput.value = currentParams[parameterSelector.value] || '';
-        }
-
-        // Show the parameter selector
-        parameterSelector.style.display = 'block';
-
-        // Reset camera and zoom
         resetCamera();
-
-        // Create new shape
-        createShape();    
+        createShape();
     }
 
-    // Update parameter value when selected
+    // Update Parameter Value Function
     function updateParameterValue(param, value) {
         currentParams[param] = parseFloat(value) || shapes[currentShape].defaultValues[param];
         createShape();
     }
 
-    // Helper function to get a color based on value (0 to 1) cycling through rainbow hues
+    // Rainbow Color Function
     function getRainbowColor(value) {
-        const hue = value * 360;
-        return new THREE.Color(`hsl(${hue}, 100%, 50%)`);
+        return new THREE.Color(`hsl(${value * 360}, 100%, 50%)`);
     }
 
-    let colorValue = 0;
-    let isInteracting = false;
+    // Reset Camera Function
+    function resetCamera() {
+        camera.position.set(0, 5, -40);
+        controls.reset();
+    }
 
-
-    // Animate function
+    // Animation Loop
+    let colorValue = 0, isInteracting = false;
     function animate() {
         requestAnimationFrame(animate);
-
-        if (mesh) {
-            if (!isInteracting) {
-                mesh.rotation.x += 0.01;
-                mesh.rotation.y += 0.01;
-            }
-
+        if (mesh && !isInteracting) { // Rotate the shape unless interacting
+            mesh.rotation.x += 0.01;
+            mesh.rotation.y += 0.01;
             if (isRainbow) {
-                colorValue += 0.001;
-                if (colorValue > 1) colorValue = 0;
+                colorValue = (colorValue + 0.001) % 1;
                 mesh.material.color = getRainbowColor(colorValue);
             }
         }
-
         controls.update();
         renderer.render(scene, camera);
     }
 
-    // Event listeners for mouse interactions
-    document.addEventListener('mousedown', () => {
-        isInteracting = true;
-    });
+    // Mouse Interaction Event Listeners
+    document.addEventListener('mousedown', () => isInteracting = true);
+    document.addEventListener('mouseup', () => isInteracting = false);
 
-    document.addEventListener('mouseup', () => {
-        isInteracting = false;
-    });
-
-    // Initialize shape and parameters
+    // Initialize Parameter Options and Start Animation
     updateParameterOptions();
-    createShape();
-
-    // Start animation loop
     animate();
 
-    // Event listeners for UI controls
-    document.getElementById('shape-selector').addEventListener('change', (event) => {
-        currentShape = event.target.value;
+    // Event Listeners for Selectors
+    document.getElementById('shape-selector').addEventListener('change', e => {
+        currentShape = e.target.value;
         updateParameterOptions();
     });
 
-    document.getElementById('parameter-selector').addEventListener('change', (event) => {
-        const param = event.target.value;
-    
-        if (param) {
-            let inputField = document.getElementById('param-input');
-            if (!inputField) {
-                inputField = document.createElement('input');
-                inputField.type = 'number';
-                inputField.id = 'param-input';
-                inputField.min = '0';
-                inputField.style.position = 'absolute';
-                inputField.style.top = '180px';
-                inputField.style.left = '20px';
-                document.body.appendChild(inputField);
-            }
-    
-            // Update input field value and ensure correct listener
-            inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
-    
-            // Remove any existing input event listeners to avoid multiple listeners
-            inputField.removeEventListener('input', inputField._listener);
-    
-            // Create a new listener for the current parameter
-            inputField._listener = (e) => updateParameterValue(param, e.target.value);
-            inputField.addEventListener('input', inputField._listener);
+    document.getElementById('parameter-selector').addEventListener('change', e => {
+        const param = e.target.value, inputField = document.getElementById('param-input') || document.createElement('input');
+        if (!inputField.id) {
+            inputField.type = 'number';
+            inputField.id = 'param-input';
+            inputField.min = '1';
+            inputField.style.position = 'absolute';
+            inputField.style.top = '180px';
+            inputField.style.left = '20px';
+            document.body.appendChild(inputField);
         }
+        inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
+        inputField.oninput = e => updateParameterValue(param, e.target.value);
     });
 
-    document.getElementById('style-selector').addEventListener('change', (event) => {
-        currentStyle = event.target.value;
+    document.getElementById('style-selector').addEventListener('change', e => {
+        currentStyle = e.target.value;
         createShape();
     });
 
-    document.getElementById('color-selector').addEventListener('change', (event) => {
-        const value = event.target.value;
-        isRainbow = value === 'rainbow';
-        currentColor = isRainbow ? new THREE.Color(0xff0000) : new THREE.Color(value);
+    document.getElementById('color-selector').addEventListener('change', e => {
+        isRainbow = e.target.value === 'rainbow';
+        currentColor = isRainbow ? new THREE.Color(0xff0000) : new THREE.Color(e.target.value);
         createShape();
     });
 }
