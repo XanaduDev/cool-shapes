@@ -11,7 +11,7 @@ init();
 function init() {
     // Initialize Three.js scene, camera, and renderer
     const canvas = document.getElementById('canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
@@ -32,7 +32,7 @@ function init() {
         camera.updateProjectionMatrix();
     });
 
-    let currentShape = 'torus';
+    let currentShape = 'torusKnot';
     let currentParams = { ...shapes[currentShape].defaultValues };
     let currentStyle = 'solid';
     let isRainbow = true;
@@ -101,7 +101,8 @@ function init() {
             case 'basic': mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color })); break; 
             case 'matcap': material = new THREE.MeshMatcapMaterial({ matcap: new THREE.TextureLoader().load('photos/metcap.png') }); material.color.set(color); mesh = new THREE.Mesh(geometry, material); break; 
             case 'normal': mesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial()); break; 
-            default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.5, roughness: 0.5, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break; 
+            case 'mirror': mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 1, roughness: 0})); break;
+            default: mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, metalness: 0.8, roughness: 0.4, wireframe: currentStyle === 'wireframe' })); mesh.castShadow = true; break; 
         }
 
         scene.add(mesh);
