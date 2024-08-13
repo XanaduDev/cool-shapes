@@ -14,7 +14,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     // Camera Setup
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 1000);
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.set(10, 0, -30);
 
     // Scene and Controls Setup
