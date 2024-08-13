@@ -208,7 +208,7 @@ function init() {
 
     document.getElementById('parameter-selector').addEventListener('change', (event) => {
         const param = event.target.value;
-
+    
         if (param) {
             let inputField = document.getElementById('param-input');
             if (!inputField) {
@@ -219,13 +219,18 @@ function init() {
                 inputField.style.position = 'absolute';
                 inputField.style.top = '180px';
                 inputField.style.left = '20px';
-                inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
-                inputField.addEventListener('input', (e) => updateParameterValue(param, e.target.value));
                 document.body.appendChild(inputField);
-            } else {
-                inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
-                inputField.oninput = (e) => updateParameterValue(param, e.target.value);
             }
+    
+            // Update input field value and ensure correct listener
+            inputField.value = currentParams[param] || shapes[currentShape].defaultValues[param];
+    
+            // Remove any existing input event listeners to avoid multiple listeners
+            inputField.removeEventListener('input', inputField._listener);
+    
+            // Create a new listener for the current parameter
+            inputField._listener = (e) => updateParameterValue(param, e.target.value);
+            inputField.addEventListener('input', inputField._listener);
         }
     });
 
