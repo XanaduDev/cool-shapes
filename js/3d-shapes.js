@@ -4,6 +4,8 @@ import { RectAreaLightHelper } from './RectAreaLightHelper.js';
 import { RectAreaLightUniformsLib } from './RectAreaLightUniformsLib.js';
 import { shapes } from './shapes.js';
 
+
+
 init();
 
 function init() {
@@ -39,6 +41,10 @@ function init() {
 
     // Add lights
     RectAreaLightUniformsLib.init();
+
+    const pointLight = new THREE.PointLight(0xffffff, 50);
+    pointLight.position.set(5, 10, -5);
+    scene.add(pointLight); 
 
     const rectLight1 = new THREE.RectAreaLight( 0x0000ff, 5, 10, 28 );
     rectLight1.position.set( - 13, 0, 15 );
