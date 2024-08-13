@@ -40,6 +40,11 @@ function init() {
 
     // Lighting Setup
     RectAreaLightUniformsLib.init();
+
+    const pointLight = new THREE.PointLight(0xffffff, 50);
+    pointLight.position.set(5, 10, -5);
+    scene.add(pointLight); 
+    
     const lights = [
         { color: 0x0000ff, position: [-13, 0, 15] },
         { color: 0x00ff00, position: [0, 0, 15] },
