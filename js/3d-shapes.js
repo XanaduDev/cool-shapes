@@ -14,8 +14,8 @@ function init() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-    camera.position.set( 35, 5, -30 );
+    const camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 1, 1000 );
+    camera.position.set( 10, 0, -30 );
 
     const scene = new THREE.Scene();
 
@@ -34,9 +34,9 @@ function init() {
 
     let currentShape = 'torusKnot';
     let currentParams = { ...shapes[currentShape].defaultValues };
-    let currentStyle = 'solid';
-    let isRainbow = true;
-    let currentColor = new THREE.Color(0xff0000);
+    let currentStyle = 'mirror';
+    let isRainbow = false;
+    let currentColor = 'Ivory';
     let mesh;
 
     // Add lights
